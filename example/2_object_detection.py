@@ -21,34 +21,34 @@ config = {
 train_scheme = [
    {
       'layers': 'heads',
-      'epochs': 10,
+      'epochs': 1,
       'learning_rate': 0.001
    },
-   {
-      'layers': 'heads',
-      'epochs': 10,
-      'learning_rate': 0.0005
-   },
-   {
-      'layers': 'heads',
-      'epochs': 10,
-      'learning_rate': 0.0001
-   },
-   {
-      'layers': 'all',
-      'epochs': 10,
-      'learning_rate': 0.0001
-   },
-   {
-      'layers': 'all',
-      'epochs': 10,
-      'learning_rate': 0.00005
-   },
-   {
-      'layers': 'all',
-      'epochs': 10,
-      'learning_rate': 0.00001
-   },
+   # {
+   #    'layers': 'heads',
+   #    'epochs': 10,
+   #    'learning_rate': 0.0005
+   # },
+   # {
+   #    'layers': 'heads',
+   #    'epochs': 10,
+   #    'learning_rate': 0.0001
+   # },
+   # {
+   #    'layers': 'all',
+   #    'epochs': 10,
+   #    'learning_rate': 0.0001
+   # },
+   # {
+   #    'layers': 'all',
+   #    'epochs': 10,
+   #    'learning_rate': 0.00005
+   # },
+   # {
+   #    'layers': 'all',
+   #    'epochs': 10,
+   #    'learning_rate': 0.00001
+   # },
 ]
 
 coco_model_path = 'mask_rcnn_coco.h5'
@@ -57,4 +57,4 @@ if not os.path.exists(coco_model_path):
 
 detector.perform_training(annotation_patches, scheme=train_scheme, config=config, initial_model=coco_model_path)
 
-detector.perform_inference(annotation_patches, target, os.path.join(results, 'detections'))
+# detector.perform_inference(annotation_patches, target, os.path.join(results, 'detections'))

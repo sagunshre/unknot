@@ -1,8 +1,11 @@
 import numpy as np
+from IPython import embed
 
 class CircleAnnotation(object):
    def __init__(self, row):
+      self.label_id = row[1]
       self.label = row[2]
+      self.annotation_id = row[0]
       center, radius = self.get_center_and_radius_(row)
       self.center = center
       self.radius = radius

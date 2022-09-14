@@ -12,6 +12,8 @@ from . import utils
 from . import CircleAnnotation
 from . import Image
 from . import PatchesCollection
+from IPython import embed
+
 
 class Dataset(object):
 
@@ -107,9 +109,21 @@ class Dataset(object):
             image.set_target_distance(target_distance)
 
       executor = ThreadPoolExecutor(max_workers=max_workers)
+
       jobs = []
+
+      classes = {
+          1: 'Interesting',
+      }
+
+      i = 2
       for image in images:
-         jobs.append(executor.submit(image.generate_train_patches, images_target_path, masks_target_path, patches.crop_dimension))
+        for annotation in image.annotations:
+          value = f"{annotation.label_id}"
+          if value and  value not in classes.values():
+            classes[i] = value
+            i += 1
+        jobs.append(executor.submit(image.generate_train_patches, images_target_path, masks_target_path, patches.crop_dimension, classes))
 
       images = []
       masks = []
@@ -125,11 +139,14 @@ class Dataset(object):
       mean_pixel = np.array(mean_pixels).mean(axis = 0).tolist()
 
       patches.fill({
+         'images_target_path': images_target_path,
+         'masks_target_path': masks_target_path,
          'scale_transfer': scale_transfer,
          'for_dataset': for_dataset,
          'images': images,
          'masks': masks,
          'mean_pixel': mean_pixel,
+         'classes': classes
       })
 
       return patches

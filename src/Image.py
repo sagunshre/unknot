@@ -4,6 +4,7 @@ import cv2
 import numpy as np
 import warnings
 
+
 class Image(object):
    def __init__(self, path, distance):
       self.path = path
@@ -20,17 +21,28 @@ class Image(object):
       for annotation in self.annotations:
          annotation.set_scale(self.scale)
 
-   def generate_train_patches(self, images_path, masks_path, dimension):
+   def generate_train_patches(self, images_path, masks_path, dimension, classes_dict):
       image = VipsImage.new_from_file(self.path).resize(self.scale)
 
       if image.width < dimension or image.height < dimension:
          warnings.warn('Image "{}" is smaller than the crop dimension!'.format(self.filename))
 
+
+      classes_dict = {v: k for k, v in classes_dict.items()}
       masks = []
-      for annotation in self.annotations:
-         mask = np.zeros((image.height, image.width), dtype=np.uint8)
-         cv2.circle(mask, annotation.get_center(), annotation.get_radius(), 1, -1)
-         masks.append(mask.astype(np.bool))
+      classes = []
+
+      for i, annotation in enumerate(self.annotations):
+        mask = np.zeros((image.height, image.width), dtype=np.int32)
+        cv2.circle(mask, annotation.get_center(), annotation.get_radius(), classes_dict[f"{annotation.label_id}"], -1)
+        masks.append(mask)
+        print(np.any(mask), annotation.annotation_id, annotation.label_id)
+        if not annotation.label_id:
+          # The ID of the interesting class is always 1.
+          classes.append(1)
+        else:
+          # This is the ID of the class that is assigned in generate() above.
+          classes.append(classes_dict[f"{annotation.label_id}"])
 
       image_paths = []
       mask_paths = []
@@ -38,8 +50,8 @@ class Image(object):
 
       for i, annotation in enumerate(self.annotations):
          image_file = '{}_{}.jpg'.format(self.filename, i)
-         image_crop, mask_crops = self.generate_annotation_crop(image, masks, annotation, dimension)
-         mask_file = self.save_mask(mask_crops, image_file, masks_path)
+         image_crop, mask_crops = self.generate_annotation_crop(image, masks[i], annotation, dimension)
+         mask_file = self.save_mask(mask_crops, image_file, masks_path, classes[i])
          image_crop.write_to_file(os.path.join(images_path, image_file), strip=True, Q=95)
          image_paths.append(image_file)
          mask_paths.append(mask_file)
@@ -72,10 +84,10 @@ class Image(object):
 
       return image_crop, mask_crops
 
-   def save_mask(self, masks, filename, path):
+   def save_mask(self, masks, filename, path, classes):
       mask_store = [mask for mask in masks if np.any(mask)]
       mask_file = '{}.npz'.format(filename)
-      np.savez_compressed(os.path.join(path, mask_file), masks=mask_store)
+      np.savez_compressed(os.path.join(path, mask_file), masks=mask_store, classes=classes)
 
       return mask_file
 

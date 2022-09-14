@@ -2,6 +2,7 @@ import json
 import shutil
 import os
 from . import utils
+from IPython import embed
 
 class PatchesCollection(object):
    def __init__(self, path):
@@ -39,6 +40,9 @@ class PatchesCollection(object):
       base = self.get_images_path()
 
       return [os.path.join(base, file) for file in self.images]
+
+   def get_classes(self):
+      return self.patches_json['classes']
 
    def get_masks_path(self):
       return os.path.join(self.path, 'masks')

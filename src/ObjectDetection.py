@@ -11,12 +11,13 @@ from . import utils
 from .mrcnn import config as mrcnn_config
 from .mrcnn import utils as mrcnn_utils
 from .mrcnn import model as mrcnn_model
+from IPython import embed
 
 class Config(mrcnn_config.Config):
    def __init__(self, train_patches, config={}):
       self.NAME = 'unknot'
       # Add one for the background class (0).
-      self.NUM_CLASSES = 2
+      self.NUM_CLASSES = 1 + len(train_patches.get_classes())
       # Disable validation since we do not have ground truth.
       self.VALIDATION_STEPS = 0
       self.MEAN_PIXEL = np.array(train_patches.mean_pixel)
@@ -77,11 +78,10 @@ class Dataset(mrcnn_utils.Dataset):
       classes = []
       masks = []
 
-      for mask in data['masks']:
-         source_class_id = 1
-         if source_class_id not in self.ignore_classes:
-             classes.append(self.map_source_class_id('{}.{}'.format(self.name, source_class_id)))
-             masks.append(mask)
+      for mask, class_id in zip(data['masks'], data['classes']):
+          if class_id not in self.ignore_classes:
+              classes.append(self.map_source_class_id('{}.{}'.format(self.name, class_id)))
+              masks.append(mask)
 
       if len(classes) == 0:
          return super().load_mask(image_index)
@@ -95,7 +95,7 @@ class TrainingDataset(Dataset):
    def __init__(self, train_patches):
       images = train_patches.get_images_paths()
       masks = train_patches.get_masks_paths()
-      classes = {1: 'Interesting'}
+      classes = train_patches.get_classes()
       super().__init__(images=images, masks=masks, classes=classes)
 
 class InferenceDataset(Dataset):
@@ -117,7 +117,6 @@ class ObjectDetector(object):
       utils.ensure_dir(self.model_dir)
       train_config = TrainingConfig(annotation_patches, config)
       train_dataset = TrainingDataset(annotation_patches)
-
       train_config.display()
       train_dataset.prepare()
       model = mrcnn_model.MaskRCNN(mode="training", config=train_config, model_dir=self.model_dir)
