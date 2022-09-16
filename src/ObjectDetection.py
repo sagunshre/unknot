@@ -11,7 +11,6 @@ from . import utils
 from .mrcnn import config as mrcnn_config
 from .mrcnn import utils as mrcnn_utils
 from .mrcnn import model as mrcnn_model
-from IPython import embed
 
 class Config(mrcnn_config.Config):
    def __init__(self, train_patches, config={}):

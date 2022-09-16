@@ -1,5 +1,4 @@
 import numpy as np
-from IPython import embed
 
 class CircleAnnotation(object):
    def __init__(self, row):

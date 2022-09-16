@@ -12,8 +12,6 @@ from . import utils
 from . import CircleAnnotation
 from . import Image
 from . import PatchesCollection
-from IPython import embed
-
 
 class Dataset(object):
 

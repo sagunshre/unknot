@@ -2,7 +2,6 @@ import json
 import shutil
 import os
 from . import utils
-from IPython import embed
 
 class PatchesCollection(object):
    def __init__(self, path):

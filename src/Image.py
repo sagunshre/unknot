@@ -50,8 +50,8 @@ class Image(object):
 
       for i, annotation in enumerate(self.annotations):
          image_file = '{}_{}.jpg'.format(self.filename, i)
-         image_crop, mask_crops = self.generate_annotation_crop(image, masks[i], annotation, dimension)
-         mask_file = self.save_mask(mask_crops, image_file, masks_path, classes[i])
+         image_crop, mask_crops = self.generate_annotation_crop(image, masks, annotation, dimension)
+         mask_file = self.save_mask(mask_crops, image_file, masks_path, classes)
          image_crop.write_to_file(os.path.join(images_path, image_file), strip=True, Q=95)
          image_paths.append(image_file)
          mask_paths.append(mask_file)
