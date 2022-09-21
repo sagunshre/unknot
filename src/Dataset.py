@@ -16,9 +16,8 @@ from . import PatchesCollection
 
 class Dataset(object):
 
-   def __init__(self, config_path, only_classes=[]):
-      with open(config_path, 'r') as f:
-         self.config = json.load(f)
+   def __init__(self, config, config_path, only_classes=[]):
+      self.config = config
       self.config_dir = os.path.dirname(config_path)
       self.name = self.config['name']
       self.crop_dimension = self.config.get('crop_dimension', 512)
