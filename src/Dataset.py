@@ -5,6 +5,7 @@ import os
 import random
 import shutil
 import math
+from IPython import embed
 from pyvips import Image as VipsImage
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -121,6 +122,7 @@ class Dataset(object):
           if value and  value not in classes.values():
             classes[i] = value
             i += 1
+        # image.generate_train_patches(images_target_path, masks_target_path, patches.crop_dimension, classes)
         jobs.append(executor.submit(image.generate_train_patches, images_target_path, masks_target_path, patches.crop_dimension, classes))
 
       images = []

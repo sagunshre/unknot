@@ -3,6 +3,10 @@ from pyvips import Image as VipsImage
 import cv2
 import numpy as np
 import warnings
+from IPython import embed
+from keras.preprocessing.image import ImageDataGenerator
+import ast
+
 
 
 class Image(object):
@@ -81,6 +85,19 @@ class Image(object):
 
       image_crop = image.extract_area(topLeft[0], topLeft[1], current_crop_dimension[0], current_crop_dimension[1])
       mask_crops = [mask[topLeft[1]:bottomRight[1], topLeft[0]:bottomRight[0]] for mask in masks]
+
+      if annotation.transformation:
+        datagen = ImageDataGenerator()
+
+        transformation = ast.literal_eval(annotation.transformation)
+        img = np.fromstring(image_crop.write_to_memory(), dtype=np.uint8).reshape(image_crop.width, image_crop.height, 3)
+        img_transformed = datagen.apply_transform(img, transformation)
+
+        mask_transformation = {list(transformation.items())[0][0]: list(transformation.items())[0][1]}
+        mask_crops = datagen.apply_transform(np.array(mask_crops), mask_transformation)
+
+        img = img_transformed.reshape(image_crop.width * image_crop.height * 3)
+        image_crop = VipsImage.new_from_memory(img.data, image_crop.width, image_crop.height, bands=3, format="uchar")
 
       return image_crop, mask_crops
 
