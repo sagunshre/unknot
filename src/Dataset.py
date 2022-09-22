@@ -63,7 +63,7 @@ class Dataset(object):
             if image_filename not in images:
                image_path = os.path.join(images_dir, image_filename)
                image_distance = metadata[image_filename]
-               images[image_filename] = Image.Image(image_path, image_distance)
+               images[image_filename] = Image.Image(image_path, image_distance, self.config['method'])
             images[image_filename].add_annotation(annotation)
 
       return images.values()

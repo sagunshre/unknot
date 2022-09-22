@@ -10,10 +10,11 @@ import ast
 
 
 class Image(object):
-   def __init__(self, path, distance):
+   def __init__(self, path, distance, method):
       self.path = path
       self.filename = os.path.basename(path)
       self.distance = distance
+      self.method = method
       self.annotations = []
       self.scale = 1
 
@@ -86,7 +87,7 @@ class Image(object):
       image_crop = image.extract_area(topLeft[0], topLeft[1], current_crop_dimension[0], current_crop_dimension[1])
       mask_crops = [mask[topLeft[1]:bottomRight[1], topLeft[0]:bottomRight[0]] for mask in masks]
 
-      if annotation.transformation:
+      if annotation.transformation and self.method == "tros":
         datagen = ImageDataGenerator()
 
         transformation = ast.literal_eval(annotation.transformation)
