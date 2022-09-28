@@ -18,7 +18,7 @@ class Sampling(object):
     self.config = config
 
   def configure(self):
-    self.data = np.array(self.read_report(), dtype="U256")
+    self.data = np.array(self.read_report(), dtype=object)
     self.total_patches = self.data.shape[0]
     self.sorted_labels = self.get_sorted_label_strategy()
 
@@ -165,7 +165,6 @@ class Sampling(object):
                 'image_latitude','shape_id','shape_name','points','attributes', 'transformation']
       writer.writerow(header)
       for row in csv_rows:
-        print(row)
         writer.writerow(row)
 
 
@@ -175,13 +174,9 @@ config = { 'methods': ['randomSampling', 'transformationSampling'],
                               {'name': 'rule-50-75-100', 'sample_sizes': {}},
                               {'name': 'rule-50-100', 'sample_sizes': {}}],
                     'transformation': [{"theta": 15, "channel_shift_intensity": 30},
-                                       {"theta": 15, "channel_shift_intensity": -30},
                                        {"theta": -15, "channel_shift_intensity": 30},
-                                       {"theta": -15, "channel_shift_intensity": -30},
                                        {"flip_horizontal": True , "channel_shift_intensity": 30},
-                                       {"flip_horizontal": True, "channel_shift_intensity": -30},
-                                       {"flip_vertical": True, "channel_shift_intensity": 30},
-                                       {"flip_vertical": True, "channel_shift_intensity": -30}]}
+                                       {"flip_vertical": True, "channel_shift_intensity": 30}]}
 
 sampling = Sampling(sys.argv[1], config)
 sampling.start()

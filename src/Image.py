@@ -34,20 +34,22 @@ class Image(object):
 
 
       classes_dict = {v: k for k, v in classes_dict.items()}
-      masks = []
       classes = []
 
       for i, annotation in enumerate(self.annotations):
-        mask = np.zeros((image.height, image.width), dtype=np.int32)
-        cv2.circle(mask, annotation.get_center(), annotation.get_radius(), classes_dict[f"{annotation.label_id}"], -1)
-        masks.append(mask)
-        print(np.any(mask), annotation.annotation_id, annotation.label_id)
         if not annotation.label_id:
           # The ID of the interesting class is always 1.
           classes.append(1)
         else:
           # This is the ID of the class that is assigned in generate() above.
           classes.append(classes_dict[f"{annotation.label_id}"])
+
+      masks = []
+
+      for i, annotation in enumerate(self.annotations):
+        mask = np.zeros((image.height, image.width), dtype=np.int32)
+        cv2.circle(mask, annotation.get_center(), annotation.get_radius(), classes_dict[f"{annotation.label_id}"], -1)
+        masks.append(mask)
 
       image_paths = []
       mask_paths = []
@@ -103,9 +105,11 @@ class Image(object):
       return image_crop, mask_crops
 
    def save_mask(self, masks, filename, path, classes):
-      mask_store = [mask for mask in masks if np.any(mask)]
+      combined = [(mask, class_id) for mask, class_id in zip(masks, classes) if np.any(mask)]
+      mask_store = [mask for mask, class_id in combined]
+      class_store = [class_id for mask, class_id in combined]
       mask_file = '{}.npz'.format(filename)
-      np.savez_compressed(os.path.join(path, mask_file), masks=mask_store, classes=classes)
+      np.savez_compressed(os.path.join(path, mask_file), masks=mask_store, classes=class_store)
 
       return mask_file
 
