@@ -1,9 +1,11 @@
 {
-   "name": "target",
-   "images_dir": "/mnt/biigle/storage/images/SO268-2/100-1_OFOS-05/",
-   "metadata_file": "metadata.csv",
-   "train_annotations_file": "annotations/train.csv",
-   "test_annotations_file": "annotations/test.csv",
-   "annotation_patches_dir": "annotation_patches",
-   "crop_dimension": 512
+  "name": "target",
+  "rules": "target",
+  "method": "target",
+  "images_dir": "/mnt/biigle/storage/images/SO268-2/100-1_OFOS-05/",
+  "metadata_file": "metadata.csv",
+  "train_annotations_file": "annotations/train.csv",
+  "test_annotations_file": "annotations/test.csv",
+  "annotation_patches_dir": "annotation_patches/target",
+  "crop_dimension": 512
 }

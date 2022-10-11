@@ -47,9 +47,9 @@ class Image(object):
       masks = []
 
       for i, annotation in enumerate(self.annotations):
-        mask = np.zeros((image.height, image.width), dtype=np.int32)
-        cv2.circle(mask, annotation.get_center(), annotation.get_radius(), classes_dict[f"{annotation.label_id}"], -1)
-        masks.append(mask)
+        mask = np.zeros((image.height, image.width), dtype=np.uint8)
+        cv2.circle(mask, annotation.get_center(), annotation.get_radius(), 1, -1)
+        masks.append(mask.astype(np.bool))
 
       image_paths = []
       mask_paths = []

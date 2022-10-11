@@ -11,6 +11,7 @@ from . import utils
 from .mrcnn import config as mrcnn_config
 from .mrcnn import utils as mrcnn_utils
 from .mrcnn import model as mrcnn_model
+from IPython import embed
 
 class Config(mrcnn_config.Config):
    def __init__(self, train_patches, config={}):
@@ -98,8 +99,7 @@ class TrainingDataset(Dataset):
       super().__init__(images=images, masks=masks, classes=classes)
 
 class InferenceDataset(Dataset):
-   def __init__(self, images):
-      classes = {1: 'Interesting'}
+   def __init__(self, images, classes):
       super().__init__(images=images, classes=classes)
 
 class ObjectDetector(object):
@@ -149,11 +149,12 @@ class ObjectDetector(object):
          raise TypeError('The dataset must be a Dataset.')
 
       images = [image.path for image in dataset.get_test_images()]
+
       config = InferenceConfig(annotation_patches)
-      dataset = InferenceDataset(images)
+      self.dataset = InferenceDataset(images, annotation_patches.get_classes())
 
       config.display()
-      dataset.prepare()
+      self.dataset.prepare()
 
       utils.ensure_dir(target_dir)
 
@@ -164,16 +165,16 @@ class ObjectDetector(object):
       model = mrcnn_model.MaskRCNN(mode="inference", config=config, model_dir=self.model_dir)
       model.load_weights(model_path, by_name=True)
 
-      for i, image_info in enumerate(dataset.image_info):
+      for i, image_info in enumerate(self.dataset.image_info):
          print('Processing image {}'.format(os.path.basename(image_info['path'])))
-         image = dataset.load_image(i)
+         image = self.dataset.load_image(i)
          results = model.detect([image])
          self.process_inference_result(results[0], image_info, target_dir)
 
    def process_inference_result(self, result, image_info, target_dir):
       filename = os.path.basename(image_info['path'])
       points = []
-      for roi, score in zip(result['rois'], result['scores']):
+      for roi, score, class_id in zip(result['rois'], result['scores'], result['class_ids']):
          # ROIs are stored as (y1, x1, y2, x2).
          y = min(roi[0], roi[2])
          x = min(roi[1], roi[3])
@@ -182,7 +183,8 @@ class ObjectDetector(object):
          rx = round(w / 2)
          ry = round(h / 2)
          r = max(rx, ry)
-         points.append([int(x + rx), int(y + ry), int(r), float(score)])
+         label = self.dataset.classes[f"{class_id}"]
+         points.append([int(x + rx), int(y + ry), int(r), float(score), label])
 
       path = os.path.join(target_dir, '{}.json'.format(filename))
       with open(path, 'w') as outfile:
@@ -193,7 +195,10 @@ class ObjectDetector(object):
 
       mask = np.zeros((height, width), dtype=np.bool)
       for m in result['masks']:
-          mask += m
+        if mask.shape != m.shape:
+          mask = np.zeros(m.shape, dtype=np.bool)
+        mask += m
+
       mask = mask.astype(np.uint8) * 255
       path = os.path.join(target_dir, '{}.png'.format(filename))
       image = VipsImage.new_from_memory(mask, width, height, 1, 'uchar')

@@ -7,7 +7,6 @@ class CircleAnnotation(object):
       self.label = row[2]
       self.transformation = row[-1]
       self.annotation_id = row[0]
-      print(self.annotation_id)
       center, radius = self.get_center_and_radius_(row)
       self.center = center
       self.radius = radius

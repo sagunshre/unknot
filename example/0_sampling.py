@@ -19,8 +19,13 @@ class Sampling(object):
 
   def configure(self):
     self.data = np.array(self.read_report(), dtype=object)
-    self.total_patches = self.data.shape[0]
-    self.sorted_labels = self.get_sorted_label_strategy()
+    self.sorted_labels = self.get_sorted_labels()
+    exclude_indices = np.where(np.array(list(self.sorted_labels.values())) < 50)
+    labels_to_exclude = np.array(list(self.sorted_labels.keys()))[exclude_indices]
+    self.src = np.array([[key, value] for key, value in self.data[:, 0:2] if value not in labels_to_exclude], dtype=object)
+    for k in labels_to_exclude:
+      del self.sorted_labels[k]
+
 
   def start(self):
     self.configure()
@@ -39,7 +44,7 @@ class Sampling(object):
         data.append(row)
     return data
 
-  def get_sorted_label_strategy(self):
+  def get_sorted_labels(self):
     counter =  Counter(self.data[:, 1])
     return Counter(dict(sorted(counter.items(), key=lambda pair: pair[1], reverse=True)))
 
@@ -86,10 +91,9 @@ class Sampling(object):
 
   # SMOTE and random undersampling
   def randomSampling(self, method):
-    self.src = self.data[:, 0]
-    X = np.array(range(0, self.src.size)).reshape(-1, 1)
-    y = self.data[:, 1]
-
+    # self.src = self.data[:, 0]
+    X = np.array(range(0, self.src.shape[0])).reshape(-1, 1)
+    y = self.src[:, 1]
     for experiment in self.config["rules"]:
       sampling_strategy = experiment["sample_sizes"]
       # check if any label needs to be under sampled
@@ -120,7 +124,7 @@ class Sampling(object):
   def saveSampleCSV(self, method, exp, X, y):
     # get csv rows of resampled X
     exp_name = exp['name']
-    annotations = list(self.src[X.flatten()])
+    annotations = list(self.src[:, 0][X.flatten()])
     annotations = list(zip(annotations, y))
     annotations.sort(key = lambda x: x[0])
 
@@ -173,10 +177,10 @@ config = { 'methods': ['randomSampling', 'transformationSampling'],
                               {'name': 'rule-75', 'sample_sizes': {}},
                               {'name': 'rule-50-75-100', 'sample_sizes': {}},
                               {'name': 'rule-50-100', 'sample_sizes': {}}],
-                    'transformation': [{"theta": 15, "channel_shift_intensity": 30},
-                                       {"theta": -15, "channel_shift_intensity": 30},
-                                       {"flip_horizontal": True , "channel_shift_intensity": 30},
-                                       {"flip_vertical": True, "channel_shift_intensity": 30}]}
+                    'transformation': [{"theta": 15},
+                                       {"theta": -15},
+                                       {"flip_horizontal": True },
+                                       {"flip_vertical": True}]}
 
 sampling = Sampling(sys.argv[1], config)
 sampling.start()
