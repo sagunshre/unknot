@@ -72,6 +72,21 @@ class Dataset(mrcnn_utils.Dataset):
 
       super().prepare()
 
+   def load_image(self, image_id):
+      """Load the specified image and return a [H,W,3] Numpy array.
+      """
+      # Load image with Vips because if ignores EXIF rotation (as it should).
+      image = self.vips_image_to_numpy_array(VipsImage.new_from_file(self.image_info[image_id]['path']))
+      # image = skimage.io.imread(self.image_info[image_id]['path'])
+      # If grayscale. Convert to RGB for consistency.
+      if image.ndim != 3 or image.shape[-1] == 1:
+          image = skimage.color.gray2rgb(image.squeeze())
+      # If has an alpha channel, remove it for consistency
+      if image.shape[-1] == 4:
+          image = image[..., :3]
+
+      return image
+
    def load_mask(self, image_index):
       file = self.masks[image_index]
       data = np.load(file, allow_pickle=True)
@@ -79,9 +94,9 @@ class Dataset(mrcnn_utils.Dataset):
       masks = []
 
       for mask, class_id in zip(data['masks'], data['classes']):
-          if class_id not in self.ignore_classes:
-              classes.append(self.map_source_class_id('{}.{}'.format(self.name, class_id)))
-              masks.append(mask)
+        if class_id not in self.ignore_classes:
+          classes.append(self.map_source_class_id('{}.{}'.format(self.name, class_id)))
+          masks.append(mask)
 
       if len(classes) == 0:
          return super().load_mask(image_index)
@@ -90,6 +105,25 @@ class Dataset(mrcnn_utils.Dataset):
       masks = np.stack(masks, axis = 2).astype(np.bool)
 
       return masks, classes
+
+   def vips_image_to_numpy_array(self, image):
+      # https://libvips.github.io/pyvips/intro.html#numpy-and-pil
+      format_to_dtype = {
+          'uchar': np.uint8,
+          'char': np.int8,
+          'ushort': np.uint16,
+          'short': np.int16,
+          'uint': np.uint32,
+          'int': np.int32,
+          'float': np.float32,
+          'double': np.float64,
+          'complex': np.complex64,
+          'dpcomplex': np.complex128,
+      }
+
+      return np.ndarray(buffer=image.write_to_memory(),
+                 dtype=format_to_dtype[image.format],
+                 shape=[image.height, image.width, image.bands])
 
 class TrainingDataset(Dataset):
    def __init__(self, train_patches):
@@ -195,8 +229,6 @@ class ObjectDetector(object):
 
       mask = np.zeros((height, width), dtype=np.bool)
       for m in result['masks']:
-        if mask.shape != m.shape:
-          mask = np.zeros(m.shape, dtype=np.bool)
         mask += m
 
       mask = mask.astype(np.uint8) * 255

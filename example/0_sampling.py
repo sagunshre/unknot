@@ -32,7 +32,7 @@ class Sampling(object):
     config = self.sample()
     with open(self.config_name, 'w') as exp_config:
       yaml.dump(json.loads(json.dumps(config)), exp_config)
-    # for method in config["methods"]:
+    
     getattr(self, "randomSampling")("randomSampling")
 
   def read_report(self):
@@ -89,7 +89,7 @@ class Sampling(object):
     return self.config
 
 
-  # SMOTE and random undersampling
+  # Random over and under sampling
   def randomSampling(self, method):
     # self.src = self.data[:, 0]
     X = np.array(range(0, self.src.shape[0])).reshape(-1, 1)
@@ -115,7 +115,6 @@ class Sampling(object):
         sm = RandomUnderSampler(sampling_strategy = sampling_strategy)
         X_resampled, y_resampled = sm.fit_resample(X_resampled,y_resampled)
       else:
-        # use SMOTE oversampling
         sm = RandomOverSampler(sampling_strategy = sampling_strategy)
         X_resampled, y_resampled = sm.fit_resample(X, y)
 
@@ -141,6 +140,8 @@ class Sampling(object):
     list(map(lambda x: x.append(""), majority_samples))
 
     minority_samples = []
+    
+    # for TROS added training techniques to use during data generator step
     for group in groups:
       transformation = list(islice(cycle(self.config['transformation']), len(group)))
       group = list(map(list, group))
